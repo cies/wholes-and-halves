@@ -1,6 +1,7 @@
 import qualified Data.Set as Set
 import Data.IORef
-import Control.Monad.forM_
+import Control.Monad
+import System.Random
 
 data Dig = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9
   deriving (Eq, Show, Ord, Enum, Bounded)
@@ -36,7 +37,7 @@ main = do
     l <- readIORef left
     i <- randomRIO (0, length l - 1)
     let pick = l !! i
-    modifyIORef (deleteAt i) left
+    modifyIORef left (deleteAt i)
     print (p, pick)
     )
   print . show $ evalWith (Combi D1 D2 D3 D4) (Combi D3 D4 D5 D1)
@@ -53,4 +54,4 @@ main = do
 
     deleteAt :: Int -> [a] -> [a]
     deleteAt _ [] = []
-    deleteAt n xs = take n xs ++ (deleteAt n 1 . drop 1) xs
+    deleteAt n xs = take n xs ++ (drop $ n + 1) xs
