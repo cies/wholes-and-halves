@@ -1,5 +1,7 @@
 import qualified Data.Set as Set
 import Data.List
+import System.Random (randomRIO)
+import Control.Monad (forM_)
 
 data Dig = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9
   deriving (Eq, Show, Ord, Enum, Bounded)
@@ -33,10 +35,50 @@ main = do
   let possibleCombis = filter (fitsObservations observations) allCombisNoRep
 
   putStrLn "observations: "
-  mapM_ (\(c, r) -> putStrLn $ show c ++ " -> " ++ show r) observations
+  printObs observations
   putStrLn $ "possible combis: " ++ (intercalate ", " . map show $ possibleCombis)
+
+  forM_ allCombisNoRep (\hc -> do
+      let allPosibilities = allCombisNoRep
+      tc <- pickRandElem allPosibilities
+      let r = evalWithHidden hc tc
+      printObs [(tc, r)]
+
+      let allPosibilities2 = filter (fitsObservations [(tc, r)]) allPosibilities
+      tc2 <- pickRandElem allPosibilities2
+      let r2 = evalWithHidden hc tc
+      printObs [(tc2, r2)]
+
+      let allPosibilities3 = filter (fitsObservations [(tc, r), (tc2, r2)]) allPosibilities2
+      tc3 <- pickRandElem allPosibilities3
+      let r3 = evalWithHidden hc tc
+      printObs [(tc3, r3)]
+
+      let allPosibilities4 = filter (fitsObservations [(tc, r), (tc2, r2), (tc3, r3)]) allPosibilities3
+      tc4 <- pickRandElem allPosibilities4
+      let r4 = evalWithHidden hc tc
+      printObs [(tc4, r4)]
+
+      let allPosibilities5 = filter (fitsObservations [(tc, r), (tc2, r2), (tc3, r3), (tc4, r4)]) allPosibilities4
+      tc5 <- pickRandElem allPosibilities5
+      let r5 = evalWithHidden hc tc
+      printObs [(tc5, r5)]
+
+      let allPosibilities6 = filter (fitsObservations [(tc, r), (tc2, r2), (tc3, r3), (tc4, r4), (tc5, r5)]) allPosibilities5
+      tc6 <- pickRandElem allPosibilities6
+      let r6 = evalWithHidden hc tc
+      printObs [(tc6, r6)]
+
+      putStrLn "next... \n"
+      )
   
   where
+    printObs :: [(Combi, Res)] -> IO ()
+    printObs os = mapM_ (\(c, r) -> putStrLn $ show c ++ " -> " ++ show r) os
+
+    pickRandElem :: [a] -> IO a
+    pickRandElem l = (l !!) <$> randomRIO (0, length l - 1)
+
     generateEnums :: (Enum a) => [a]
     generateEnums = enumFrom (toEnum 0)
 
