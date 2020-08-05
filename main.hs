@@ -94,4 +94,7 @@ main = do
     fitsObservations :: [(Combi, Res)] -> Combi -> Bool
     fitsObservations obs c = all (id) . map (\(obC, obRes) -> evalWithHidden c obC == obRes) $ obs
 
-
+    evalPossibleWH :: Int -> Int -> [(Int, Int)]
+    evalPossibleWH w h = [(pw, ph) | pw <- list, ph <- list, pw * 2 + ph == w * 2 + h, pw + ph <= 4]
+      where
+        list = [0,1,2,3,4]
