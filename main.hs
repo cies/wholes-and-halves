@@ -1,7 +1,6 @@
-import qualified Data.Set as Set
-import Data.List
-import Control.Monad (forM_)
-import Debug.Trace
+import           Data.List         (nub)
+import qualified Data.Set as Set   (fromList, size, intersection)
+import           Control.Monad     (mapM_)
 
 data Dig = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9
   deriving (Eq, Show, Ord, Enum, Bounded)
@@ -51,7 +50,7 @@ main = do
   putStrLn $ "Average over 800/" ++ show (length allCombisNoRep) ++ " of a reversed valid combi list:"
   putStrLn . show . average . map (length . solve . evalWithHidden) . take 800 $ allCombisNoRepReverse
   putStrLn "\nSome attempts:"
-  forM_ (allCombisNoRepReverse) (\hc -> printObs $ solve (evalWithHidden hc))
+  mapM_ (printObs . solve . evalWithHidden) allCombisNoRepReverse
   where
     printObs :: [(Combi, Res)] -> IO ()
     printObs os = putStrLn . (showTries os ++) . concat . map showObservation $ os
