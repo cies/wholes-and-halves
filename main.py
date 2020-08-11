@@ -24,11 +24,11 @@ def allCombisWithoutRep():
             combisWithoutRep.append(combi)
     return combisWithoutRep
 
-def evalPossibleWH(turnResult):
-    combis = list()
-    for i in range(0, 4):
-        for j in range(0, 4):
-            if (i + j * 0.5 == turnResult) and (i + j <= 4):
-                combis.append([i, j])
+def evalPossibleWH (turnResult):
+    combis = []
+    for i in range(5):
+        for j in range(5):
+            if (i + j * 0.5 == turnResult) and (i + j <=4):
+                combis.append([i,j])
     return combis
 
