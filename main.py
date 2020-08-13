@@ -1,19 +1,17 @@
-import difflib
+import random
 from itertools import product
 
 
-def evalWithoutHidden(hidden, turn):
-    solver = difflib.SequenceMatcher(a=hidden, b=turn)
-    solve = solver.find_longest_match(0, len(solver.a), 0, len(solver.b))
-    wholes = solve.b
-    halves = solve.a
+def evalWithHidden(hidden, turn):
+    wholes = sum(len(set(i)) == 1 for i in zip(hidden,turn))
+    halves = len(set(hidden).intersection(turn)) - wholes
     return wholes, halves
 
 def allCombisWithRep():
-    dig = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+    dig = list(range(10))
     combisWithRep = []
-    for d in product(dig, repeat=4):
-        combisWithRep.append(''.join(d))
+    for d in product(dig, repeat = 4):
+        combisWithRep.append(d)
     return combisWithRep
 
 def allCombisWithoutRep():
@@ -24,6 +22,14 @@ def allCombisWithoutRep():
             combisWithoutRep.append(combi)
     return combisWithoutRep
 
+def allPossibleResults():
+    res = list(range(5))
+    possibleResults = []
+    for d in product(res, repeat = 2):
+        if sum(d) <= 4:
+            possibleResults.append(d)
+    return possibleResults
+    
 def evalPossibleWH (turnResult):
     combis = []
     for i in range(5):
@@ -31,4 +37,3 @@ def evalPossibleWH (turnResult):
             if (i + j * 0.5 == turnResult) and (i + j <=4):
                 combis.append([i,j])
     return combis
-
