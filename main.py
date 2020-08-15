@@ -5,13 +5,15 @@ from itertools import product
 def evalWithHidden(hidden, turn):
     wholes = sum(len(set(i)) == 1 for i in zip(hidden,turn))
     halves = len(set(hidden).intersection(turn)) - wholes
+    if halves < 0:
+        halves = 0
     return wholes, halves
 
 def allCombisWithRep():
     dig = list(range(10))
     combisWithRep = []
     for d in product(dig, repeat = 4):
-        combisWithRep.append(d)
+        combisWithRep.append(list(d))
     return combisWithRep
 
 def allCombisWithoutRep():
@@ -26,12 +28,12 @@ def allPossibleResults():
     res = list(range(5))
     possibleResults = []
     for d in product(res, repeat = 2):
-        if sum(d) <= 4:
-            possibleResults.append(d)
+        if sum(d) <= 4 and list(d) != [3, 1]:
+            possibleResults.append(list(d))
     return possibleResults
 
 def weightPossibleResult(res):
-    weight = allPossibleResults().index(res) - 1
+    weight = allPossibleResults().index(res)
     return weight
     
 def evalPossibleWH (turnResult):
@@ -42,54 +44,56 @@ def evalPossibleWH (turnResult):
                 combis.append([i,j])
     return combis
 
+def nextOptionalCombis(hidden, turn, allPossibleCombis):
+    cleanedPossibleCombis = allPossibleCombis
+    
+    wholesTurn, halvesTurn = evalWithHidden(hidden,turn)
+    optionalCombis = []
+    checkedOptionalCombis = []
+    nextTurnOptionalCombis = []
+        
+    firstMaxInList=0
+        
+    for c in allPossibleCombis:
+        wholesOp, halvesOp = evalWithHidden(c,turn)
+        if wholesTurn == wholesOp and halvesTurn == halvesOp:
+            checkedOptionalCombis.append(c)
+        
+    for nOC in cleanedPossibleCombis:
+        if nOC in checkedOptionalCombis:           
+            optionalCombis.append(nOC)
+            
+    cleanedPossibleCombis=optionalCombis
+
+    for aPC in allPossibleCombis: 
+        weightCombisResult = []
+        orderedWeightResult = [0] * len(allPossibleResults())
+            
+    for cPC in cleanedPossibleCombis: 
+        weightCombisResult.append(evalWithHidden(aPC,cPC))
+
+    for wCR in weightCombisResult:
+        i = weightPossibleResult(list(wCR))
+        orderedWeightResult[i] = orderedWeightResult[i] + 1
+            
+    wNoZeros = len(allPossibleCombis) - max(orderedWeightResult) 
+    if wNoZeros > firstMaxInList:
+        firstMaxInList = wNoZeros
+        nextTurnOptionalCombis = aPC    
+    
+    return nextTurnOptionalCombis
+    
 
 if __name__ == '__main__':
-    
-    #hidden = random.choice(allCombisWithoutRep())
-    #allPossibleCombis = allCombisWithoutRep()
-    hidden = [5,4,1,2]
-    allPossibleCombis = [(1,2,3,4), (1,2,4,5), (1,2,8,9), (6,7,8,9), (5,4,1,2)]
-    optionalCombis = []
-    nextOptionalCombis=[]
-    
-    weightCombis = []
+    hidden = [5, 4, 1, 2]
+    allPossibleCombis = allCombisWithoutRep()
     
     turns = [
-            { "combi": [0,1,2,3], "wholes": 0, "halves": 2 },
-            { "combi": [1,2,3,4], "wholes": 0, "halves": 3 },
-            { "combi": [5,6,4,2], "wholes": 1, "halves": 2 }
+            { "combi": [0,1,2,3], "wholes": 0, "halves": 2 }
+            #{ "combi": [1,2,3,4], "wholes": 0, "halves": 3 },
+            #{ "combi": [5,6,4,2], "wholes": 1, "halves": 2 }
             ]
     
-    for t in turns:
-        for c in allPossibleCombis:
-            wholes, halves = evalWithHidden(t["combi"], c)
-            if wholes == t["wholes"] and halves == t["halves"]:
-                optionalCombis.append(c)
-    
-    optionalCombis = list(dict.fromkeys(optionalCombis))
-    
-    for oC in allPossibleCombis:
-        if oC in optionalCombis:           
-            weightCombis.append(oC)
-    
-    #optionalCombis = weightCombis
-    
-    for pC1 in optionalCombis:
-        weightCombisResult = []
-        
-        for pC2 in optionalCombis: 
-            weightCombisResult.append(evalWithHidden(pC1,pC2))
-        orderedWeightResult = [0] * (len(allPossibleResults()) - 1)
-        firstMax = 0
-        
-        for w in weightCombisResult:
-            wPR = int(weightPossibleResult(w))
-            orderedWeightResult[wPR-1] = orderedWeightResult[wPR] + 1
-        
-        wNoZeros = len(allPossibleCombis) - max(orderedWeightResult) 
-    
-        if wNoZeros > firstMax:
-            firstMax = wNoZeros
-            nextOptionalCombis = pC1
-      
-    print(nextOptionalCombis)
+    for turn in turns:
+        print(nextOptionalCombis(hidden, turn, allPossibleCombis))
+
