@@ -46,8 +46,11 @@ def evalPossibleWH (turnResult):
 
 def nextOptionalCombis(hidden, turn, allPossibleCombis):
     cleanedPossibleCombis = allPossibleCombis
+    combiT = turn["combi"]
+    wholesT = turn["wholes"]
+    halvesT = turn["halves"]
     
-    wholesTurn, halvesTurn = evalWithHidden(hidden,turn)
+    wholesTurn, halvesTurn = evalWithHidden(hidden,combiT)
     optionalCombis = []
     checkedOptionalCombis = []
     nextTurnOptionalCombis = []
@@ -55,7 +58,7 @@ def nextOptionalCombis(hidden, turn, allPossibleCombis):
     firstMaxInList=0
         
     for c in allPossibleCombis:
-        wholesOp, halvesOp = evalWithHidden(c,turn)
+        wholesOp, halvesOp = evalWithHidden(c,combiT)
         if wholesTurn == wholesOp and halvesTurn == halvesOp:
             checkedOptionalCombis.append(c)
         
@@ -69,18 +72,18 @@ def nextOptionalCombis(hidden, turn, allPossibleCombis):
         weightCombisResult = []
         orderedWeightResult = [0] * len(allPossibleResults())
             
-    for cPC in cleanedPossibleCombis: 
-        weightCombisResult.append(evalWithHidden(aPC,cPC))
-
-    for wCR in weightCombisResult:
-        i = weightPossibleResult(list(wCR))
-        orderedWeightResult[i] = orderedWeightResult[i] + 1
-            
-    wNoZeros = len(allPossibleCombis) - max(orderedWeightResult) 
-    if wNoZeros > firstMaxInList:
-        firstMaxInList = wNoZeros
-        nextTurnOptionalCombis = aPC    
+        for cPC in cleanedPossibleCombis: 
+            weightCombisResult.append(evalWithHidden(aPC,cPC))
     
+        for wCR in weightCombisResult:
+            i = weightPossibleResult(list(wCR))
+            orderedWeightResult[i] = orderedWeightResult[i] + 1
+                
+        wNoZeros = len(allPossibleCombis) - max(orderedWeightResult) 
+        if wNoZeros > firstMaxInList:
+            firstMaxInList = wNoZeros
+            nextTurnOptionalCombis = aPC    
+
     return nextTurnOptionalCombis
     
 
@@ -96,4 +99,3 @@ if __name__ == '__main__':
     
     for turn in turns:
         print(nextOptionalCombis(hidden, turn, allPossibleCombis))
-
