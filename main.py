@@ -76,7 +76,8 @@ def weightResult(res):
     return weight
 
 
-def nextOptionalCombis(hiddenCombi, turnCombi, turnAdvancedRes, possibleCombis):
+def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
+    cleanedPossibleCombis = possibleCombis
     
     allNextTurnOptionalCombis = []
     for basicResult in basicFromAdvanced(turnAdvancedRes):
@@ -86,7 +87,7 @@ def nextOptionalCombis(hiddenCombi, turnCombi, turnAdvancedRes, possibleCombis):
           if basicResult == evalWithHidden(c, turnCombi):
               checkedOptionalCombis.append(c)
           
-      for nOC in possibleCombis:
+      for nOC in cleanedPossibleCombis:
           if nOC in checkedOptionalCombis:           
               optionalCombis.append(nOC)
               
@@ -114,7 +115,7 @@ def nextOptionalCombis(hiddenCombi, turnCombi, turnAdvancedRes, possibleCombis):
       if oC not in uniqueNextTurnOptionalCombis: 
         uniqueNextTurnOptionalCombis.append(oC) 
 
-    return optionalCombis, uniqueNextTurnOptionalCombis
+    return uniqueNextTurnOptionalCombis
     
 
 if __name__ == '__main__':
@@ -129,11 +130,15 @@ if __name__ == '__main__':
     print("Now let's try solve one...")
     hiddenCombi = [5, 4, 1, 2]
     possibleCombis = allCombisWithoutRep
-    while True:
-        turnCombi = possibleCombis[0]
-        turnBasicRes = evalWithHidden(hiddenCombi, turnCombi)
+    for i in range(5):  # while True:  # while loop gets stuck now, hence the for loop
+        pickedTurnCombi = possibleCombis[0]
+        turnBasicRes = evalWithHidden(hiddenCombi, pickedTurnCombi)
         turnAdvancedRes = advancedFromBasic(turnBasicRes)
-        possibleCombis, pickedTurnCombi = nextOptionalCombis(hiddenCombi, turnCombi, turnAdvancedRes, possibleCombis)
-        print(turnCombi, turnBasicRes, turnAdvancedRes, possibleCombis)
+        possibleCombis = nextOptionalCombis(pickedTurnCombi, turnAdvancedRes, possibleCombis)
+        print(pickedTurnCombi, turnBasicRes, turnAdvancedRes, possibleCombis)
         if turnBasicRes == Res(4, 0):
+            print("Got it!")
+            break
+        if pickedTurnCombi == []:
+            print("Oops, no more options... (error)")
             break
