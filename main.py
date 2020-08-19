@@ -2,14 +2,30 @@ import random
 from itertools import product
 from typing import NamedTuple
 
-class Res(NamedTuple):
+
+class BasicRes(NamedTuple):
+    # The turn eval result in basic rules, wholes and halves separate
     wholes: int
     halves: int
-    # NOTE: Should be `has_halve: bool` when using the ADVANCED W&Hs rules.
-    #       Currently the code uses floats to represent results under ADVANCED rules.
+    def toAdvanced(self):
+        return AdvancedRes(self.wholes + (self.halves // 2), bool(self.halves % 2))
     def __repr__(self):
-        # Nice display method
         return str(self.wholes) + "|" + str(self.halves)  # not a dot to show its basicness
+
+class AdvancedRes(NamedTuple):
+    # The turn eval result in the advanced rules, only one or zero halves
+    wholes: int
+    hasHalve: bool
+    def toBasicResults(self):
+        # Returns a list of Res following BASIC rules from float representation of the result (which follows ADVANCED rules).
+        # `advancedRes` is a float.
+        basicResults = []  # NOTE: Please do not overload the use of the word "combis" here
+        for r in allPossibleBasicResults:
+            if r.toAdvanced == self:  # Cheap test first
+                basicResults.append(r)
+        return basicResults
+    def __repr__(self):
+        return str(self.wholes) + "." + ("1" if self.hasHalve else "0")  # dot shows it's advanced
 
 # Unused as of yet as it's require type juggling. For now just use tuples.
 # class Combi(NamedTuple):
@@ -40,27 +56,14 @@ allCombisWithoutRep = calculateAllCombisWithoutRep()
 def calculateAllPossibleBasicResults():
     # Carefully ordered list of all possible results in BASIC W&Hs rules:
     # Returns: [Res(0, 0, Res(0, 1), Res(0, 2), ..., Res(2, 2), Res(3, 0), Res(4, 0)]
-    res = [0, 1, 2, 3, 4]
     possibleResults = []  # list of Res
-    for d in product(res, repeat = 2):
+    for d in product([0, 1, 2, 3, 4], repeat = 2):
         if sum(d) <= 4 and list(d) != [3, 1]:
-            possibleResults.append(Res(d[0], d[1]))
+            possibleResults.append(BasicRes(d[0], d[1]))
     return possibleResults
 
 allPossibleBasicResults = calculateAllPossibleBasicResults()
 lenWeightResults = len(allPossibleBasicResults)
-
-def basicFromAdvanced(advancedRes):
-    # Returns a list of Res following BASIC rules from float representation of the result (which follows ADVANCED rules).
-    # `advancedRes` is a float.
-    advancedResults = []  # NOTE: Please do not overload the use of the word "combis" here
-    for basicRes in allPossibleBasicResults:
-        if advancedFromBasic(basicRes) == advancedRes:  # Cheap test first
-            advancedResults.append(basicRes)
-    return advancedResults
-
-def advancedFromBasic(basicRes):
-    return basicRes.wholes + basicRes.halves * 0.5
 
 def evalWithHidden(hidden, turn):
     # Returns: a Res representing the result under BASIC W&Hs rules
@@ -68,7 +71,7 @@ def evalWithHidden(hidden, turn):
     halves = len(set(hidden).intersection(turn)) - wholes
     if halves < 0:
         halves = 0
-    return Res(wholes, halves)
+    return BasicRes(wholes, halves)
 
 def weightResult(res):
     # Assigns weight based on result's position in list of allPossibleBasicResults.
@@ -88,7 +91,7 @@ def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
     allNextTurnOptionalCombis = []
     lenPossibleCombis = len(possibleCombis)
 
-    for basicResult in basicFromAdvanced(turnAdvancedRes):
+    for basicResult in turnAdvancedRes.toBasicResults():
 
         # List of combis that comparing with the turn_combi have the same result (wholes+halves*0.5) as the turn_result
         checkedOptionalCombis = [nOC for nOC in possibleCombis if basicResult == evalWithHidden(nOC, turnCombi)]
@@ -110,9 +113,8 @@ def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
                 firstMaxInList = minNoZeros
                 allNextTurnOptionalCombis.append(aPC)
 
-    uniqueNextTurnOptionalCombis = uniqueElementsList(allNextTurnOptionalCombis)
+    return uniqueElementsList(allNextTurnOptionalCombis)
 
-    return uniqueNextTurnOptionalCombis
     
 
 if __name__ == '__main__':
@@ -130,10 +132,10 @@ if __name__ == '__main__':
     for i in range(5):  # while True:  # while loop gets stuck now, hence the for loop
         pickedTurnCombi = possibleCombis[0]
         turnBasicRes = evalWithHidden(hiddenCombi, pickedTurnCombi)
-        turnAdvancedRes = advancedFromBasic(turnBasicRes)
+        turnAdvancedRes = turnBasicRes.toAdvanced()
         possibleCombis = nextOptionalCombis(pickedTurnCombi, turnAdvancedRes, possibleCombis)
         print(pickedTurnCombi, turnBasicRes, turnAdvancedRes, possibleCombis)
-        if turnBasicRes == Res(4, 0):
+        if turnBasicRes == BasicRes(4, 0):
             print("Got it!")
             break
         if pickedTurnCombi == []:
