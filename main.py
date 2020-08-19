@@ -48,7 +48,8 @@ def calculateAllPossibleBasicResults():
     return possibleResults
 
 allPossibleBasicResults = calculateAllPossibleBasicResults()
-    
+lenWeightResults = len(allPossibleBasicResults)
+
 def basicFromAdvanced(advancedRes):
     # Returns a list of Res following BASIC rules from float representation of the result (which follows ADVANCED rules).
     # `advancedRes` is a float.
@@ -75,45 +76,41 @@ def weightResult(res):
     weight = allPossibleBasicResults.index(res)  # This may be optimized, data structure not optimal for fast `index()`
     return weight
 
+def uniqueElementsList(list):
+    # Returns a list of unique elements
+    uniqueElements = []
+    for element in list:
+        if element not in uniqueElements:
+            uniqueElements.append(element)
+    return uniqueElements
 
 def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
-    cleanedPossibleCombis = possibleCombis
-    
     allNextTurnOptionalCombis = []
-    for basicResult in basicFromAdvanced(turnAdvancedRes):
-      optionalCombis = []
-      checkedOptionalCombis = []
-      for c in possibleCombis:
-          if basicResult == evalWithHidden(c, turnCombi):
-              checkedOptionalCombis.append(c)
-          
-      for nOC in cleanedPossibleCombis:
-          if nOC in checkedOptionalCombis:           
-              optionalCombis.append(nOC)
-              
-      cleanedPossibleCombis = optionalCombis
+    lenPossibleCombis = len(possibleCombis)
 
-      firstMaxInList = 0
-      for aPC in possibleCombis: 
-          weightCombisResult = []  # List of Res (BASIC rules)
-          orderedWeightResult = [0] * len(allPossibleBasicResults)
-              
-          for cPC in cleanedPossibleCombis: 
-              weightCombisResult.append(evalWithHidden(aPC, cPC))
-      
-          for wCR in weightCombisResult:
-              weight = weightResult(wCR)
-              orderedWeightResult[weight] = orderedWeightResult[weight] + 1
-                  
-          wNoZeros = len(possibleCombis) - max(orderedWeightResult)
-          if wNoZeros > firstMaxInList:
-              firstMaxInList = wNoZeros
-              allNextTurnOptionalCombis.append(aPC)
-    
-    uniqueNextTurnOptionalCombis = []
-    for oC in allNextTurnOptionalCombis: 
-      if oC not in uniqueNextTurnOptionalCombis: 
-        uniqueNextTurnOptionalCombis.append(oC) 
+    for basicResult in basicFromAdvanced(turnAdvancedRes):
+
+        # List of combis that comparing with the turn_combi have the same result (wholes+halves*0.5) as the turn_result
+        checkedOptionalCombis = [nOC for nOC in possibleCombis if basicResult == evalWithHidden(nOC, turnCombi)]
+
+        firstMaxInList = 0
+
+        for aPC in possibleCombis:
+            weightCombisResult = [evalWithHidden(aPC, cPC) for cPC in checkedOptionalCombis]  # List of Res (BASIC rules)
+            orderedWeightResult = [0] * lenWeightResults  # List of Weights for possible basic results [Res(0, 0, Res(0, 1), Res(0, 2), ..., Res(2, 2), Res(3, 0), Res(4, 0)]
+
+            # Sum of weights for [Res(0, 0, Res(0, 1), Res(0, 2), ..., Res(2, 2), Res(3, 0), Res(4, 0)] in the turn
+            for wCR in weightCombisResult:
+                weight = weightResult(wCR)
+                orderedWeightResult[weight] = orderedWeightResult[weight] + 1
+
+            # Minimax to find a next guess
+            minNoZeros = lenPossibleCombis - max(orderedWeightResult)
+            if minNoZeros > firstMaxInList:
+                firstMaxInList = minNoZeros
+                allNextTurnOptionalCombis.append(aPC)
+
+    uniqueNextTurnOptionalCombis = uniqueElementsList(allNextTurnOptionalCombis)
 
     return uniqueNextTurnOptionalCombis
     
@@ -127,7 +124,7 @@ if __name__ == '__main__':
     # print("Let's see allCombisWithRep...")
     # print(len(allCombisWithRep), allCombisWithRep)
     
-    print("Now let's try solve one...")
+    print("Now let's try solving one...")
     hiddenCombi = [5, 4, 1, 2]
     possibleCombis = allCombisWithoutRep
     for i in range(5):  # while True:  # while loop gets stuck now, hence the for loop
