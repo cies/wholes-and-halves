@@ -21,7 +21,7 @@ class AdvancedRes(NamedTuple):
         # `advancedRes` is a float.
         basicResults = []  # NOTE: Please do not overload the use of the word "combis" here
         for r in allPossibleBasicResults:
-            if r.toAdvanced == self:  # Cheap test first
+            if r.toAdvanced() == self:  # Cheap test first
                 basicResults.append(r)
         return basicResults
     def __repr__(self):
@@ -93,7 +93,7 @@ def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
     possibleCombis.remove(turnCombi)
     lenPossibleCombis = len(possibleCombis)
 
-    for basicResult in basicFromAdvanced(turnAdvancedRes):
+    for basicResult in turnAdvancedRes.toBasicResults():
 
         # List of combis that comparing with the turn_combi have the same result (wholes+halves*0.5) as the turn_result
         checkedOptionalCombis = [nOC for nOC in possibleCombis if basicResult == evalWithHidden(nOC, turnCombi)]
@@ -121,29 +121,32 @@ def nextOptionalCombis(turnCombi, turnAdvancedRes, possibleCombis):
 
     return uniqueNextTurnOptionalCombis, uniqueCheckedOptionalCombis
 
-    
 
 if __name__ == '__main__':
     print("Here's allPossibleBasicResults", allPossibleBasicResults)
 
     print("Our allCombisWithoutRep count is", len(allCombisWithoutRep))
     # print(len(allCombisWithoutRep), allCombisWithoutRep)
-    
+
     # print("Let's see allCombisWithRep...")
     # print(len(allCombisWithRep), allCombisWithRep)
-    
+
     print("Now let's try solving one...")
-    hiddenCombi = [5, 4, 1, 6]
+    hiddenCombi = [5, 4, 1, 2]
     possibleCombis = allCombisWithoutRep
-    for i in range(5):  # while True:  # while loop gets stuck now, hence the for loop
+    turnBasicRes = BasicRes(0, 0)
+
+    while turnBasicRes != BasicRes(4, 0):
         pickedTurnCombi = possibleCombis[0]
         turnBasicRes = evalWithHidden(hiddenCombi, pickedTurnCombi)
-        turnAdvancedRes = advancedFromBasic(turnBasicRes)
-        print("Picked turn is:",''.join(str(pickedTurnCombi)),"; the result of the turn is: ",turnBasicRes," that equals to ",str(turnAdvancedRes))
-        possibleCombis, possibleCombis = nextOptionalCombis(pickedTurnCombi, turnAdvancedRes, possibleCombis)
-        print("Possible combis are:",''.join(str(possibleCombis)))
-        if turnBasicRes == Res(4, 0):
-            print("Got it!")
+        turnAdvancedRes = turnBasicRes.toAdvanced()
+        print("Picked turn is:", ''.join(str(pickedTurnCombi)), ", the result of the turn is: ", turnBasicRes, " that equals to ", str(turnAdvancedRes))
+        
+        nextTurnOptionalCombis, possibleCombis = nextOptionalCombis(pickedTurnCombi, turnAdvancedRes, possibleCombis)
+        print("Next turn combis are:", ''.join(str(nextTurnOptionalCombis)))
+        
+        if turnBasicRes == BasicRes(4, 0):
+            print("Got it! The hidden combi is ", pickedTurnCombi)
             break
         if pickedTurnCombi == []:
             print("Oops, no more options... (error)")
